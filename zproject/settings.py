@@ -10,7 +10,13 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/6.0/ref/settings/
 """
 
+import os
 from pathlib import Path
+
+from dotenv import load_dotenv
+
+# Load .env from the project root (BASE_DIR is defined below).
+load_dotenv(Path(__file__).resolve().parent.parent / ".env")
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +44,7 @@ INSTALLED_APPS = [
     'django.contrib.messages',
     'django.contrib.staticfiles',
     'rest_framework',
+    'django_celery_results',
     'zserver',
 ]
 
@@ -117,3 +124,24 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/6.0/howto/static-files/
 
 STATIC_URL = 'static/'
+
+
+# ── Celery ────────────────────────────────────────────────────────────────────
+# Credentials are loaded from .env via python-dotenv above.
+_redis_host     = os.environ["REDIS_HOST"]
+_redis_port     = os.environ["REDIS_PORT"]
+_redis_password = os.environ["REDIS_PASSWORD"]
+
+# Upstash Redis requires TLS (rediss://) and auth in the URL.
+_REDIS_URL = f"rediss://:{_redis_password}@{_redis_host}:{_redis_port}/0"
+
+CELERY_BROKER_URL         = _REDIS_URL
+CELERY_BROKER_USE_SSL     = {"ssl_cert_reqs": None}   # Upstash uses self-signed cert
+CELERY_RESULT_BACKEND     = "django-db"                # persisted via django_celery_results
+CELERY_CACHE_BACKEND      = "default"                  # unused but avoids warnings
+CELERY_TASK_SERIALIZER    = "json"
+CELERY_RESULT_SERIALIZER  = "json"
+CELERY_ACCEPT_CONTENT     = ["json"]
+CELERY_TIMEZONE           = TIME_ZONE
+CELERY_TASK_TRACK_STARTED = True
+CELERY_TASK_EAGER_PROPAGATES = True
