@@ -12,10 +12,6 @@ GET   /jobs/<job_id>/results – full results: transactions, anomalies, narrativ
 from __future__ import annotations
 
 import logging
-import os
-from pathlib import Path
-
-from django.conf import settings
 from rest_framework import status
 from rest_framework.decorators import api_view, parser_classes
 from rest_framework.parsers import MultiPartParser
@@ -37,10 +33,6 @@ logger = logging.getLogger(__name__)
 @api_view(["GET"])
 def health_check(request):
     return Response({"status": "healthy", "service": "wrangle-api"}, status=status.HTTP_200_OK)
-
-
-# Directory where uploaded CSVs are stored until the worker picks them up.
-_UPLOAD_DIR = Path(settings.MEDIA_ROOT) / "uploads"
 
 
 # ── Helpers ───────────────────────────────────────────────────────────────────
@@ -76,27 +68,18 @@ def upload_job(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    original_name = csv_file.name
-    if not original_name.lower().endswith(".csv"):
+    if not csv_file.name.lower().endswith(".csv"):
         return Response(
-            {"error": f"Invalid file type '{original_name}'. Only .csv files are accepted."},
+            {"error": f"Invalid file type '{csv_file.name}'. Only .csv files are accepted."},
             status=status.HTTP_400_BAD_REQUEST,
         )
 
-    # ── Persist the uploaded file ─────────────────────────────────────────────
-    _UPLOAD_DIR.mkdir(parents=True, exist_ok=True)
-    destination = _UPLOAD_DIR / original_name
-
-    with open(destination, "wb") as f:
-        for chunk in csv_file.chunks():
-            f.write(chunk)
-
-    # ── Create the Job record ─────────────────────────────────────────────────
-    job = Job.objects.create(filename=original_name)
+    # ── Create the Job record (Django FileField saves the file automatically) ──
+    job = Job.objects.create(file=csv_file)
 
     # ── Enqueue the Celery task ───────────────────────────────────────────────
-    process_job.delay(job.id, str(destination))
-    logger.info("upload_job: enqueued job %s for file '%s'", job.id, original_name)
+    process_job.delay(job.id)
+    logger.info("upload_job: enqueued job %s for file '%s'", job.id, job.file.name)
 
     return Response(
         {"job_id": job.id, "status": job.status},

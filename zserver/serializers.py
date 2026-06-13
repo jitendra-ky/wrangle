@@ -8,9 +8,27 @@ TransactionSerializer   – used by GET /jobs/{id}/results
 JobResultsSerializer    – assembles the full results response
 """
 
+import os
+
 from rest_framework import serializers
 
 from .models import Job, JobSummary, Transaction
+
+
+def _filename(job: Job) -> str:
+    """Return just the basename of the uploaded file (e.g. 'transactions.csv')."""
+    return os.path.basename(job.file.name) if job.file else ""
+
+
+def _file_url(job: Job, request=None) -> str | None:
+    """Return the fully-qualified URL to the uploaded file, or None."""
+    if not job.file:
+        return None
+    try:
+        url = job.file.url
+        return request.build_absolute_uri(url) if request else url
+    except ValueError:
+        return None
 
 
 # ── JobSummary ────────────────────────────────────────────────────────────────
@@ -32,16 +50,26 @@ class JobSummarySerializer(serializers.ModelSerializer):
 # ── Job (list view) ───────────────────────────────────────────────────────────
 
 class JobListSerializer(serializers.ModelSerializer):
+    filename = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
+
     class Meta:
         model  = Job
         fields = [
             "id",
             "filename",
+            "file_url",
             "status",
             "row_count_raw",
             "row_count_clean",
             "created_at",
         ]
+
+    def get_filename(self, job: Job) -> str:
+        return _filename(job)
+
+    def get_file_url(self, job: Job) -> str | None:
+        return _file_url(job, self.context.get("request"))
 
 
 # ── Job (status view) ─────────────────────────────────────────────────────────
@@ -52,13 +80,16 @@ class JobStatusSerializer(serializers.ModelSerializer):
     from the related JobSummary; otherwise it is null.
     """
 
-    summary = serializers.SerializerMethodField()
+    filename = serializers.SerializerMethodField()
+    file_url = serializers.SerializerMethodField()
+    summary  = serializers.SerializerMethodField()
 
     class Meta:
         model  = Job
         fields = [
             "id",
             "filename",
+            "file_url",
             "status",
             "row_count_raw",
             "row_count_clean",
@@ -67,6 +98,12 @@ class JobStatusSerializer(serializers.ModelSerializer):
             "error_message",
             "summary",
         ]
+
+    def get_filename(self, job: Job) -> str:
+        return _filename(job)
+
+    def get_file_url(self, job: Job) -> str | None:
+        return _file_url(job, self.context.get("request"))
 
     def get_summary(self, job: Job):
         """Return serialized JobSummary only when the job is completed."""

@@ -1,3 +1,5 @@
+import os
+
 from django.db import models
 from django.utils import timezone
 
@@ -12,7 +14,7 @@ class JobStatus(models.TextChoices):
 class Job(models.Model):
     """Tracks a single CSV upload and its pipeline run."""
 
-    filename      = models.CharField(max_length=255)
+    file          = models.FileField(upload_to="uploads/", blank=True)
     status        = models.CharField(
         max_length=20,
         choices=JobStatus.choices,
@@ -28,7 +30,7 @@ class Job(models.Model):
         ordering = ["-created_at"]
 
     def __str__(self):
-        return f"Job({self.id}, {self.filename}, {self.status})"
+        return f"Job({self.id}, {os.path.basename(self.file.name)}, {self.status})"
 
     # ── Status transitions ────────────────────────────────────────────────────
 

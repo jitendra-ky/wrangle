@@ -22,14 +22,13 @@ logger = logging.getLogger(__name__)
 
 
 @shared_task(bind=True, name="zserver.process_job")
-def process_job(self, job_id: int, csv_path: str) -> None:
+def process_job(self, job_id: int) -> None:
     """
     Run the pipeline for *job_id* and persist results.
 
     Parameters
     ----------
-    job_id   : PK of the Job record.
-    csv_path : Absolute path to the uploaded CSV file.
+    job_id : PK of the Job record.  The CSV path is derived from job.file.path.
     """
     try:
         job = Job.objects.get(pk=job_id)
@@ -41,6 +40,7 @@ def process_job(self, job_id: int, csv_path: str) -> None:
     logger.info("process_job: starting pipeline for job %s", job_id)
 
     try:
+        csv_path = job.file.path
         result = PipelineOrchestrator().run(csv_path)
         _persist_result(job, result)
         job.mark_completed(result.row_count_raw, result.row_count_clean)
