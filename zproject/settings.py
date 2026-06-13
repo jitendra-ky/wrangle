@@ -125,6 +125,14 @@ USE_TZ = True
 
 STATIC_URL = 'static/'
 
+# ── Media / uploads ───────────────────────────────────────────────────────────
+# Uploaded CSV files are saved here before the Celery worker processes them.
+MEDIA_URL  = "/media/"
+MEDIA_ROOT = BASE_DIR / "media"
+
+# Default primary key field type
+DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
+
 
 # ── Celery ────────────────────────────────────────────────────────────────────
 # Credentials are loaded from .env via python-dotenv above.
