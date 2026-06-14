@@ -12,7 +12,7 @@ from zserver.services.anomaly import AnomalyDetector
 from zserver.services.llm.classifier import LLMClassifier
 from zserver.services.llm.narrator import LLMNarrativeBuilder
 
-CSV_PATH = Path(__file__).resolve().parents[2] / "local_assets" / "transactions.csv"
+CSV_PATH = Path(__file__).resolve().parent / "fixtures" / "transactions.csv"
 
 
 
