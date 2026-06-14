@@ -1,0 +1,9 @@
+.venv/
+local_assets/
+pipeline_output/
+*.pyc
+db.sqlite3
+scripts/
+.env
+temp2.py
+media/
