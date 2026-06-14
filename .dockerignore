@@ -1,0 +1,35 @@
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+
+# Virtual environment
+.venv/
+
+# Git
+.git/
+.gitignore
+
+# Dev & local assets
+db.sqlite3
+local_assets/
+pipeline_output/
+*.ipynb
+scripts/
+temp*.py
+
+# Secrets — never bake into the image
+.env
+
+# Uploaded files / media (mounted as a Docker volume at runtime)
+media/
+
+# IDE
+.vscode/
+.idea/
+
+# Test artifacts
+.coverage
+htmlcov/

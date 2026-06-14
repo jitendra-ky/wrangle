@@ -4,6 +4,10 @@ pipeline_output/
 *.pyc
 db.sqlite3
 scripts/
-.env
 temp2.py
+
+# Secrets — never commit real credentials
+.env
+# Docker env with placeholder values is safe to commit
+!.env.docker
 media/
