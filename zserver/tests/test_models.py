@@ -5,9 +5,15 @@ from django.test import TestCase
 from zserver.models import Job, JobStatus, Transaction, JobSummary, RiskLevel
 
 
+def _make_job(**kwargs) -> Job:
+    """Create a Job without an uploaded file (file field is optional/blank)."""
+    return Job.objects.create(**kwargs)
+
+
 class TestJobStatusTransitions(TestCase):
     def setUp(self):
-        self.job = Job.objects.create(filename="test.csv")
+        # Job.file is a FileField(blank=True) so we can omit it in tests.
+        self.job = _make_job()
 
     def test_initial_status_is_pending(self):
         self.assertEqual(self.job.status, JobStatus.PENDING)
@@ -33,12 +39,14 @@ class TestJobStatusTransitions(TestCase):
         self.assertIsNotNone(self.job.completed_at)
 
     def test_str(self):
-        self.assertIn("test.csv", str(self.job))
+        # __str__ uses os.path.basename(self.file.name) which returns "" when no file
+        result = str(self.job)
+        self.assertIn("Job(", result)
 
 
 class TestTransactionModel(TestCase):
     def setUp(self):
-        self.job = Job.objects.create(filename="test.csv")
+        self.job = _make_job()
 
     def test_create_transaction(self):
         txn = Transaction.objects.create(
@@ -72,7 +80,7 @@ class TestTransactionModel(TestCase):
 
 class TestJobSummaryModel(TestCase):
     def setUp(self):
-        self.job = Job.objects.create(filename="test.csv")
+        self.job = _make_job()
 
     def test_create_summary(self):
         summary = JobSummary.objects.create(
