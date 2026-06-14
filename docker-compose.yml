@@ -62,6 +62,8 @@ services:
       - --loglevel=info
       - --concurrency=2
     env_file: .env.docker
+    environment:
+      SKIP_MIGRATE: "1"   # api service owns migrations; worker must not race it
     depends_on:
       db:
         condition: service_healthy
