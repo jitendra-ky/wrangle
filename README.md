@@ -73,4 +73,6 @@ curl -X GET "http://localhost:8000/jobs/1/results"
 
 ## Submission Details
 - **[System Design Diagram](https://drive.google.com/file/d/1Xyu8lzipk673td7jcRY_TLAPQ7sxdKAs/view?usp=sharing)**
-- **[3-Minute Technical Video Review (Placeholder)](#)**
+
+## 3-Minute Technical Video Review**
+https://youtu.be/ZOb_ZmaFAww
